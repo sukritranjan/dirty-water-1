@@ -18,16 +18,15 @@ cm2nm=1.0E+7 #1 cm in nm
 hc=1.98645e-9 #value of h*c in erg*nm, useful to convert from ergs/cm2/s/nm to photons/cm2/s/nm
 
 ###Plotting switches.
-plotBr=True
-plotI=True
-plotCl=True
-plotSO4m=True
+plotBr=False
+plotI=False
+plotCl=False
 
-plotFeBF42=True
-plotferrocyanide=True
-plotSNP_FeCl2_FeSO4=True
+plotFeBF42=False
+plotferrocyanide=False
+plotSNP_FeCl2_FeSO4=False
 
-plot_halide_ferrous_ocean=True
+plot_halide_ferrous_ocean=False
 
 plot_halide_freshwater_lake=True
 plot_halide_carbonate_lake=True
@@ -51,8 +50,9 @@ def get_timescale(process, total_abs_abs, total_abs_wav, depth):
         #Direct photodissociation of nucleobases, following the simplifying assumption of Cleaves et al. 1998, i.e. that nucleobase photolysis rate is proportional to the transmittance at 260 nm
         abs_260nm=np.interp(260., total_abs_wav, total_abs_abs) #Get decadic absorption coefficient at 260 nm.
         def transmittance(x, a):
-            return 10.0**(-a*x)
+            return 10.0**(-a*x/0.5) #factor of /0.5 is /cos(theta), with theta=60 deg chosen for consistency with 2-stream diffuse stream and Rugheimer et al. 2015 solar zenith angle. 
         timescale_enhancement=depth/scipy.integrate.quad(transmittance, 0, depth, args=(abs_260nm), epsabs=0, epsrel=1e-3,limit=1000)[0]
+        
     if process=='cytidine-deamination':
         df=pd.read_excel('./todd_data_for_sukrit.xlsx', sheet_name='C-to-U') 
         todd_wav_centers=np.array(df['Wavelength (nm)']) #nm
@@ -71,7 +71,7 @@ def get_timescale(process, total_abs_abs, total_abs_wav, depth):
         def integrand(x, wav): #main integral, actual solution
             a=np.interp(wav, total_abs_wav, total_abs_abs)
             phi=np.interp(wav, todd_wav_dense, todd_rates_dense)
-            return ((10.0**(-a*x))*phi)
+            return ((10.0**(-a*x/0.5))*phi) #factor of /0.5 is /cos(theta), with theta=60 deg chosen for consistency with 2-stream diffuse stream and Rugheimer et al. 2015 solar zenith angle. 
         def integrand_1d(wav): #surface only
             phi=np.interp(wav, todd_wav_dense, todd_rates_dense)
             return phi
@@ -95,7 +95,7 @@ def get_timescale(process, total_abs_abs, total_abs_wav, depth):
         def integrand(x, wav): #main integral, actual solution
             a=np.interp(wav, total_abs_wav, total_abs_abs)
             phi=np.interp(wav, todd_wav_dense, todd_rates_dense)
-            return ((10.0**(-a*x))*phi)
+            return ((10.0**(-a*x/0.5))*phi) #factor of /0.5 is /cos(theta), with theta=60 deg chosen for consistency with 2-stream diffuse stream and Rugheimer et al. 2015 solar zenith angle. 
         def integrand_1d(wav): #surface only
             phi=np.interp(wav, todd_wav_dense, todd_rates_dense)
             return phi
@@ -120,7 +120,7 @@ def get_timescale(process, total_abs_abs, total_abs_wav, depth):
         def integrand(x, wav): #main integral, actual solution
             a=np.interp(wav, total_abs_wav, total_abs_abs)
             phi=np.interp(wav, todd_wav_dense, todd_rates_dense)
-            return ((10.0**(-a*x))*phi)
+            return ((10.0**(-a*x/0.5))*phi) #factor of /0.5 is /cos(theta), with theta=60 deg chosen for consistency with 2-stream diffuse stream and Rugheimer et al. 2015 solar zenith angle. 
         def integrand_1d(wav): #surface only
             phi=np.interp(wav, todd_wav_dense, todd_rates_dense)
             return phi
@@ -145,7 +145,7 @@ def get_timescale(process, total_abs_abs, total_abs_wav, depth):
         def integrand(x, wav): #main integral, actual solution
             a=np.interp(wav, total_abs_wav, total_abs_abs)
             phi=np.interp(wav, todd_wav_dense, todd_rates_dense)
-            return ((10.0**(-a*x))*phi)
+            return ((10.0**(-a*x/0.5))*phi) #factor of /0.5 is /cos(theta), with theta=60 deg chosen for consistency with 2-stream diffuse stream and Rugheimer et al. 2015 solar zenith angle. 
         def integrand_1d(wav): #surface only
             phi=np.interp(wav, todd_wav_dense, todd_rates_dense)
             return phi
@@ -204,7 +204,7 @@ data_wav['gelbstoff_azra'], data_abs['gelbstoff_azra'] = np.genfromtxt('./Azra_P
 data_wav['KCl_azra'], data_abs['KCl_azra'] = np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/perkampus_kcl.dat', skip_header=2, unpack=True, usecols=(0,1))#organic gunk
 
 ###From Birkmann+2018
-df=pd.read_excel('./birkmann_2018_data.xlsx', sheet_name='Br-I-Cl', skiprow=0)
+df=pd.read_excel('./birkmann_2018_data.xlsx', sheet_name='Br-I-Cl', skiprows=0)
 #pdb.set_trace()
 data_wav['birk_BrICl']=df['Wavelength (nm)']
 data_abs['birk_Br']=df['Br- (M**-1 cm**-1)']
@@ -303,39 +303,57 @@ if plotBr:
     ax.plot(data_wav['birk_BrICl'], data_abs['birk_Br'] , linewidth=1, linestyle='--', marker='d', color='red', label=r'Br$^-$ (Birkmann+2018)')
     ax.errorbar(data_wav['LK'], data_abs['KBr_LK'] , yerr=data_abs['KBr_err_LK'], linewidth=2, linestyle='-', marker='o', color='green', label=r'KBr (This Work)', capsize=5)
     ax.errorbar(data_wav['LK'], data_abs['NaBr_LK'], yerr=data_abs['NaBr_err_LK'],linewidth=2, linestyle='-', marker='o', color='black', label=r'NaBr (This Work)', capsize=5)
-
     
+    # ###Plot the upper limit on absorption
+    # nabr_wav_inds=np.squeeze(np.where(data_abs['NaBr_LK']==0.0))
+    # kbr_wav_inds=np.squeeze(np.where(data_abs['KBr_LK']==0.0))
+    
+    # nabr_upperlim=data_abs['NaBr_LK'][nabr_wav_inds[0]-1] + 1.0*data_abs['NaBr_err_LK'][nabr_wav_inds[0]-1]
+    # kbr_upperlim=data_abs['KBr_LK'][kbr_wav_inds[0]-1] + 1.0*data_abs['KBr_err_LK'][kbr_wav_inds[0]-1]
+
+    # ax.plot(data_wav['LK'][nabr_wav_inds], np.ones(len(nabr_wav_inds))*nabr_upperlim, linestyle=':', color='black')
+    # ax.plot(data_wav['LK'][kbr_wav_inds], np.ones(len(kbr_wav_inds))*kbr_upperlim, linestyle=':', color='green')
+
     ax.set_yscale('log')
-    ax.set_ylabel(r'Molar Absorption Coefficient (M$^{-1}$cm$^{-1}$)')
+    ax.set_ylabel(r'Molar Decadic Absorption Coefficient (M$^{-1}$cm$^{-1}$)')
+    ax.set_ylim([1.0E-1, 1.0E4])
     ax.legend(ncol=1, loc='best')    
     
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')
     ax.set_xlim([200., 300.])
     
-    plt.savefig('./Plots/molecules/Brm.pdf', orientation='portrait',papertype='letter', format='pdf')
-#    plt.savefig('./Plots/molecules/Brm.jpg', orientation='portrait',papertype='letter', format='jpg')
+    plt.savefig('./Plots/molecules/Brm.pdf', orientation='portrait', format='pdf')
+#    plt.savefig('./Plots/molecules/Brm.jpg', orientation='portrait', format='jpg')
   
 if plotI:
     fig, ax=plt.subplots(1, figsize=(8., 6.), sharex=True)
 
     ax.set_title(r'I$^-$')    
-    ax.plot(data_wav['I_azra'], data_abs['I_azra'] , linewidth=1, linestyle='--', marker='d', color='blue', label=r'I$^-$ (Guenther+2001(?))')
+    ax.plot(data_wav['I_azra'], data_abs['I_azra'] , linewidth=1, linestyle='--', marker='d', color='blue', label=r'I$^-$ (Guenther+2001')
     ax.plot(data_wav['birk_BrICl'], data_abs['birk_I'] , linewidth=1, linestyle='--', marker='d', color='red', label=r'I$^-$ (Birkmann+2018)')
     ax.errorbar(data_wav['LK'], data_abs['KI_LK'], yerr=data_abs['KI_err_LK'], linewidth=2, linestyle='-', marker='o', color='green', label=r'KI (This Work)', capsize=5)
     ax.errorbar(data_wav['LK'], data_abs['NaI_LK'], yerr=data_abs['NaI_err_LK'], linewidth=2, linestyle='-', marker='o', color='black', label=r'NaI (This Work)', capsize=5)
-    ax.plot(data_wav['LK'], data_abs['I_LK'], linewidth=5, linestyle='-', color='purple', label='I$^-$ (this work)')
+    # ax.plot(data_wav['LK'], data_abs['I_LK'], linewidth=5, linestyle='-', color='purple', label='I$^-$ (this work)')
+    ax.errorbar(data_wav['LK'], data_abs['I_LK'], yerr=0, linewidth=1.5, linestyle='-', color='purple', label='I$^-$ (this work)')
+    
+    # ###Plot the upper limit on absorption
+    # i_wav_inds=np.squeeze(np.where(data_abs['I_LK']==0.0))
+    
+    # i_upperlim=data_abs['I_LK'][i_wav_inds[0]-1] + 1.0*data_abs['I_err_LK'][i_wav_inds[0]-1]
+
+    # ax.plot(data_wav['LK'][i_wav_inds], np.ones(len(i_wav_inds))*i_upperlim, linestyle=':', color='purple')
     
     ax.set_yscale('log')
-    ax.set_ylabel(r'Molar Absorption Coefficient (M$^{-1}$cm$^{-1}$)')
+    ax.set_ylabel(r'Molar Decadic Absorption Coefficient (M$^{-1}$cm$^{-1}$)')
     ax.legend(ncol=1, loc='best')    
     
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')
     ax.set_xlim([200., 300.])
     
-    plt.savefig('./Plots/molecules/Im.pdf', orientation='portrait',papertype='letter', format='pdf')
-#    plt.savefig('./Plots/molecules/Im.jpg', orientation='portrait',papertype='letter', format='jpg')
+    plt.savefig('./Plots/molecules/Im.pdf', orientation='portrait', format='pdf')
+#    plt.savefig('./Plots/molecules/Im.jpg', orientation='portrait', format='jpg')
     
 if plotCl:
     fig, ax=plt.subplots(1, figsize=(8., 6.), sharex=True)
@@ -345,18 +363,26 @@ if plotCl:
     ax.plot(data_wav['birk_BrICl'], data_abs['birk_Cl'] , linewidth=1, linestyle='--', marker='d', color='red', label=r'Cl$^-$ (Birkmann+2018)')
 #    ax.errorbar(data_wav['LK'], data_abs['KCl_LK'], yerr=data_abs['KCl_err_LK'], linewidth=2, linestyle='-', marker='o', color='green', label=r'KCl (This Work)', capsize=5)
     ax.errorbar(data_wav['LK'], data_abs['NaCl_LK'], yerr=data_abs['NaCl_err_LK'], linewidth=2, linestyle='-', marker='o', color='black', label=r'NaCl (This Work)', capsize=5)
+    
+    
+    # ###Plot the upper limit on absorption
+    # nacl_wav_inds=np.squeeze(np.where(data_abs['NaCl_LK']==0.0))
+    
+    # nacl_upperlim=data_abs['NaCl_LK'][nacl_wav_inds[0]-1] + 1.0*data_abs['NaCl_err_LK'][nacl_wav_inds[0]-1]
+
+    # ax.plot(data_wav['LK'][nacl_wav_inds], np.ones(len(nacl_wav_inds))*nacl_upperlim, linestyle=':', color='black')
 
     
     ax.set_yscale('log')
-    ax.set_ylabel(r'Molar Absorption Coefficient (M$^{-1}$cm$^{-1}$)')
+    ax.set_ylabel(r'Molar Decadic Absorption Coefficient (M$^{-1}$cm$^{-1}$)')
     ax.legend(ncol=1, loc='best')    
     
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')
     ax.set_xlim([200., 300.])
     
-    plt.savefig('./Plots/molecules/Clm.pdf', orientation='portrait',papertype='letter', format='pdf')
-#    plt.savefig('./Plots/molecules/Clm.jpg', orientation='portrait',papertype='letter', format='jpg')
+    plt.savefig('./Plots/molecules/Clm.pdf', orientation='portrait', format='pdf')
+#    plt.savefig('./Plots/molecules/Clm.jpg', orientation='portrait', format='jpg')
 
     
 if plotFeBF42:
@@ -365,19 +391,19 @@ if plotFeBF42:
     ax.set_title(r'Fe(BF$_4$)$_2$')    
     ax.errorbar(data_wav['LK'], data_abs['Fe(BF4)2_LK'], data_abs['Fe(BF4)2_err_LK'], linewidth=2, linestyle='-', marker='o', color='black', label=r'Fe(BF$_4$)$_2$ (This Work)', capsize=5)
 
-    ax.plot(data_wav['Fe(BF4)2_azra'], data_abs['Fe(BF4)2_azra'] , linewidth=1, linestyle='--', marker='d', color='blue', label=r'Fe(BF$_4$)$_2$ (Fontana+2007)')
+    ax.errorbar(data_wav['Fe(BF4)2_azra'], data_abs['Fe(BF4)2_azra'] , yerr=0, linewidth=1, linestyle='--', marker='d', color='blue', label=r'Fe(BF$_4$)$_2$ (Fontana+2007)')
 
     
     ax.set_yscale('log')
-    ax.set_ylabel(r'Molar Absorption Coefficient (M$^{-1}$cm$^{-1}$)')
+    ax.set_ylabel(r'Molar Decadic Absorption Coefficient (M$^{-1}$cm$^{-1}$)')
     ax.legend(ncol=1, loc='best')    
     
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')
-    ax.set_xlim([200., 320.])
+    ax.set_xlim([200., 300.])
     
-    plt.savefig('./Plots/molecules/FeBF42.pdf', orientation='portrait',papertype='letter', format='pdf')
-#    plt.savefig('./Plots/molecules/FeBF42.jpg', orientation='portrait',papertype='letter', format='jpg')            
+    plt.savefig('./Plots/molecules/FeBF42.pdf', orientation='portrait', format='pdf')
+#    plt.savefig('./Plots/molecules/FeBF42.jpg', orientation='portrait', format='jpg')            
 
 if plotSNP_FeCl2_FeSO4: 
     #We need to do.
@@ -388,12 +414,12 @@ if plotSNP_FeCl2_FeSO4:
     ax.plot(data_wav['FeCl2_azra'], data_abs['FeCl2_azra'] , linewidth=2, linestyle='-', marker='d', color='green', label=r'FeCl$_2$ (Fontana+2007)')
     ax.plot(data_wav['FeSO4_azra'], data_abs['FeSO4_azra'] , linewidth=2, linestyle='-', marker='d', color='red', label=r'FeSO$_4$ (Fontana+2007)')
 
-    ax.errorbar(data_wav['LK'], data_abs['K_ferrocyanide_LK'],yerr=data_abs['K_ferrocyanide_err_LK'], linewidth=1, linestyle='--', color='purple', label=r'K$_4$Fe(CN)$_6$ (This Work)',capsize=5)
-    ax.errorbar(data_wav['LK'], data_abs['Fe(BF4)2_LK'], data_abs['Fe(BF4)2_err_LK'], linewidth=1, linestyle='--', color='black', label=r'Fe(BF$_4$)$_2$ (This Work)', capsize=5)
+    ax.errorbar(data_wav['LK'], data_abs['K_ferrocyanide_LK'],yerr=data_abs['K_ferrocyanide_err_LK'], linewidth=1, linestyle='--', color='purple', label=r'K$_4$Fe(CN)$_6$ (This Work)',capsize=2)
+    ax.errorbar(data_wav['LK'], data_abs['Fe(BF4)2_LK'], data_abs['Fe(BF4)2_err_LK'], linewidth=1, linestyle='--', color='black', label=r'Fe(BF$_4$)$_2$ (This Work)', capsize=1)
 
     
     ax.set_yscale('log')
-    ax.set_ylabel(r'Molar Absorption Coefficient (M$^{-1}$cm$^{-1}$)')
+    ax.set_ylabel(r'Molar Decadic Absorption Coefficient (M$^{-1}$cm$^{-1}$)')
     ax.legend(ncol=1, loc='best')    
     
     ax.set_xscale('linear')
@@ -401,8 +427,8 @@ if plotSNP_FeCl2_FeSO4:
     ax.set_xlim([200., 300.])
 #    ax.set_ylim([1E-1, 1.0E0])
     
-    plt.savefig('./Plots/molecules/SNP_etc.pdf', orientation='portrait',papertype='letter', format='pdf')
-#    plt.savefig('./Plots/molecules/SNP.jpg', orientation='portrait',papertype='letter', format='jpg')
+    plt.savefig('./Plots/molecules/SNP_etc.pdf', orientation='portrait', format='pdf')
+#    plt.savefig('./Plots/molecules/SNP.jpg', orientation='portrait', format='jpg')
     
     
 if plotferrocyanide: 
@@ -412,23 +438,23 @@ if plotferrocyanide:
     ax.set_title(r'Ferrocyanide')    
     ax.errorbar(data_wav['LK'], data_abs['K_ferrocyanide_LK'],yerr=data_abs['K_ferrocyanide_err_LK'], linewidth=2, linestyle='-', marker='o', color='black', label=r'K$_4$Fe(CN)$_6$ (This Work)',capsize=5)
 
-    ax.plot(data_wav['ross_ferrocyanide'], data_abs['ross_ferrocyanide'] , linewidth=2, linestyle='-', marker='d', color='red', label=r'K$_4$Fe(CN)$_6$ (Ross+2018)')
+    ax.errorbar(data_wav['ross_ferrocyanide'], data_abs['ross_ferrocyanide'], yerr=0, linewidth=1, linestyle='-', marker='d', color='red', label=r'K$_4$Fe(CN)$_6$ (Ross+2018)')
     ax.plot(data_wav['ross_ferricyanide'], data_abs['ross_ferricyanide'] , linewidth=1, linestyle='--', color='blue', label=r'K$_3$Fe(CN)$_6$ (Ross+2018)')
     
 #    ax.plot(data_wav['strizhakov_SNP'], data_abs['strizhakov_SNP'] , linewidth=2, linestyle='-', marker='d', color='green', label=r'Sodium Nitroprusside (Strizhakov+2014)')
 
     
     ax.set_yscale('log')
-    ax.set_ylabel(r'Molar Absorption Coefficient (M$^{-1}$cm$^{-1}$)')
+    ax.set_ylabel(r'Molar Decadic Absorption Coefficient (M$^{-1}$cm$^{-1}$)')
     ax.legend(ncol=1, loc='best')    
     
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')
-    ax.set_xlim([200., 350.])
+    ax.set_xlim([200., 300.])
 #    ax.set_ylim([1E-1, 1.0E0])
     
-    plt.savefig('./Plots/molecules/ferrocyanide.pdf', orientation='portrait',papertype='letter', format='pdf')
-#    plt.savefig('./Plots/molecules/ferrocyanide.jpg', orientation='portrait',papertype='letter', format='jpg')
+    plt.savefig('./Plots/molecules/ferrocyanide.pdf', orientation='portrait', format='pdf')
+#    plt.savefig('./Plots/molecules/ferrocyanide.jpg', orientation='portrait', format='jpg')
 
 
 if plot_halide_ferrous_ocean:
@@ -470,7 +496,7 @@ if plot_halide_ferrous_ocean:
     ax.axhline(1.0e-2, color='black', linestyle=':')
     
     ax.legend(ncol=1, loc='best')
-    ax.set_ylabel(r'Atten. Coeff. (cm$^{-1}$)')
+    ax.set_ylabel(r'Linear Decadic Absorption Coefficient (cm$^{-1}$)')
     
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')
@@ -479,7 +505,7 @@ if plot_halide_ferrous_ocean:
     ax.set_ylim([1E-3, 1.0E1]) 
     ax.set_xlim([200., 300.])
     
-    plt.savefig('./Plots/molecules/halide_ferrous_ocean.pdf', orientation='portrait',papertype='letter', format='pdf')
+    plt.savefig('./Plots/molecules/halide_ferrous_ocean.pdf', orientation='portrait', format='pdf')
 
 #Plot prebiotic lake (freshwater)
 if plot_halide_freshwater_lake:
@@ -507,7 +533,7 @@ if plot_halide_freshwater_lake:
 
     
     ax.legend(ncol=1, loc='best')
-    ax.set_ylabel(r'Atten. Coeff. (cm$^{-1}$)')
+    ax.set_ylabel(r'Linear Decadic Absorption Coefficient (cm$^{-1}$)')
     
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')    
@@ -521,13 +547,13 @@ if plot_halide_freshwater_lake:
     ax.axhline(1.0E-2, color='black', linestyle=':')
     ax.axhline(1.0E-3, color='black', linestyle=':')
     
-    plt.savefig('./Plots/molecules/halide-freshwater-lake.pdf', orientation='portrait',papertype='letter', format='pdf')
-#    print('Freshwater lake, nucleobase photolysis timescale enhancement: {0:1.2e}'.format(get_timescale('nucleobase-photolysis', freshwater_lake, data_wav['LK'], 100.0)))
-#    print('Freshwater lake, cytidine deamination timescale enhancement: {0:1.2e}'.format(get_timescale('cytidine-deamination', freshwater_lake, data_wav['LK'], 100.0)))
-#    print('Freshwater lake, 2AO photolysis timescale enhancement: {0:1.2e}'.format(get_timescale('2AO-photolysis', freshwater_lake, data_wav['LK'], 100.0)))
-#    print('Freshwater lake, 2AI photolysis timescale enhancement: {0:1.2e}'.format(get_timescale('2AI-photolysis', freshwater_lake, data_wav['LK'], 100.0)))
-#    print('Freshwater lake, 2AT photolysis timescale enhancement: {0:1.2e}'.format(get_timescale('2AT-photolysis', freshwater_lake, data_wav['LK'], 100.0)))
-#    print()
+    plt.savefig('./Plots/molecules/halide-freshwater-lake.pdf', orientation='portrait', format='pdf')
+    print('Freshwater lake, nucleobase photolysis timescale enhancement: {0:1.2e}'.format(get_timescale('nucleobase-photolysis', freshwater_lake, data_wav['LK'], 100.0)))
+    print('Freshwater lake, cytidine deamination timescale enhancement: {0:1.2e}'.format(get_timescale('cytidine-deamination', freshwater_lake, data_wav['LK'], 100.0)))
+    print('Freshwater lake, 2AO photolysis timescale enhancement: {0:1.2e}'.format(get_timescale('2AO-photolysis', freshwater_lake, data_wav['LK'], 100.0)))
+    print('Freshwater lake, 2AI photolysis timescale enhancement: {0:1.2e}'.format(get_timescale('2AI-photolysis', freshwater_lake, data_wav['LK'], 100.0)))
+    print('Freshwater lake, 2AT photolysis timescale enhancement: {0:1.2e}'.format(get_timescale('2AT-photolysis', freshwater_lake, data_wav['LK'], 100.0)))
+    print()
     print('High-I Freshwater lake, nucleobase photolysis timescale enhancement: {0:1.2e}'.format(get_timescale('nucleobase-photolysis', freshwater_lake_highI, data_wav['LK'], 100.0)))
     print('High-I Freshwater lake, cytidine deamination timescale enhancement: {0:1.2e}'.format(get_timescale('cytidine-deamination', freshwater_lake_highI, data_wav['LK'], 100.0)))
     print('High-I Freshwater lake, 2AO photolysis timescale enhancement: {0:1.2e}'.format(get_timescale('2AO-photolysis', freshwater_lake_highI, data_wav['LK'], 100.0)))
@@ -566,7 +592,7 @@ if plot_halide_carbonate_lake:
     ax.errorbar(data_wav['LK'], conc_NaI_high*data_abs['I_LK'], yerr=conc_NaI_high*data_abs['I_err_LK'], linewidth=1, linestyle=':', color='red', label='I$^-$ (High)')
     
     ax.legend(ncol=1, loc='best')
-    ax.set_ylabel(r'Atten. Coeff. (cm$^{-1}$)')
+    ax.set_ylabel(r'Linear Decadic Absorption Coefficient (cm$^{-1}$)')
     
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')    
@@ -581,7 +607,7 @@ if plot_halide_carbonate_lake:
     ax.axhline(1.0E-3, color='black', linestyle=':')
 
     
-    plt.savefig('./Plots/molecules/halide-carbonate-lake.pdf', orientation='portrait',papertype='letter', format='pdf')
+    plt.savefig('./Plots/molecules/halide-carbonate-lake.pdf', orientation='portrait', format='pdf')
 
     ######
     #Plot UV in simulated reservoir
@@ -593,18 +619,18 @@ if plot_halide_carbonate_lake:
     ax.plot(uv_wav, uv_toa_intensity, linewidth=2, linestyle='-', marker='o', color='black', label='Stellar Irradiation')
 
     ax.plot(uv_wav, uv_surface_intensity, linewidth=2, linestyle='-', marker='o', color='purple', label='Surface')
-    ax.plot(uv_wav, uv_surface_intensity*10.0**(-carbonate_lake_withwater*1.0), linewidth=2, linestyle='-', marker='o', color='blue', label='1 cm')
-    ax.plot(uv_wav, uv_surface_intensity*10.0**(-carbonate_lake_withwater*10.0), linewidth=2, linestyle='-', marker='o', color='cyan', label='10 cm')
-    ax.plot(uv_wav, uv_surface_intensity*10.0**(-carbonate_lake_withwater*100.0), linewidth=2, linestyle='-', marker='o', color='green', label='100 cm')
+    ax.plot(uv_wav, uv_surface_intensity*10.0**(-carbonate_lake_withwater*1.0/0.5), linewidth=2, linestyle='-', marker='o', color='blue', label='1 cm')
+    ax.plot(uv_wav, uv_surface_intensity*10.0**(-carbonate_lake_withwater*10.0/0.5), linewidth=2, linestyle='-', marker='o', color='cyan', label='10 cm')
+    ax.plot(uv_wav, uv_surface_intensity*10.0**(-carbonate_lake_withwater*100.0/0.5), linewidth=2, linestyle='-', marker='o', color='green', label='100 cm')
     
     ax.legend(ncol=1, loc='best')
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')    
     ax.set_yscale('log')
-    ax.set_ylabel(r'Intensity (photons/cm^2/s/nm')
+    ax.set_ylabel(r'Intensity (photons cm$^{2}$ s$^{-1}$ nm$^{-1}$')
     ax.set_ylim([1E8, 1.0E14]) 
     ax.set_xlim([200., 300.])
-    plt.savefig('./Plots/molecules/uv_halide-carbonate-lake.pdf', orientation='portrait',papertype='letter', format='pdf')
+    plt.savefig('./Plots/molecules/uv_halide-carbonate-lake.pdf', orientation='portrait', format='pdf')
     
     ####
     ##
@@ -646,7 +672,7 @@ if plot_ferrous_lake:
 
   
     ax[0].legend(ncol=1, loc='upper right')
-    ax[0].set_ylabel(r'Atten. Coeff. (cm$^{-1}$)')    
+    ax[0].set_ylabel(r'Linear Decadic Absorption (cm$^{-1}$)')    
     ax[0].set_yscale('log')
     ax[0].set_ylim([1E-3, 1.0E1]) 
 
@@ -660,7 +686,7 @@ if plot_ferrous_lake:
     ax[1].plot(data_wav['strizhakov_SNP'], 0.29*conc_fe_halevy*data_abs['strizhakov_SNP'], linewidth=2, linestyle='--', marker='o', color='blue', label='29 nM Na$_2$Fe(CN)$_5$NO')
 
     ax[1].legend(ncol=1, loc='upper right')
-    ax[1].set_ylabel(r'Atten. Coeff. (cm$^{-1}$)')    
+    ax[1].set_ylabel(r'Linear Decadic Absorption Coefficient (cm$^{-1}$)')    
     ax[1].set_yscale('log')
     ax[1].set_ylim([1E-6, 1.0E-2]) 
     ax[1].set_xscale('linear')
@@ -675,7 +701,7 @@ if plot_ferrous_lake:
 #    ax.axhline(1.0E-5, color='black', linestyle=':')
 
     
-    plt.savefig('./Plots/molecules/ferrous-lake.pdf', orientation='portrait',papertype='letter', format='pdf')
+    plt.savefig('./Plots/molecules/ferrous-lake.pdf', orientation='portrait', format='pdf')
     
     ######
     #Plot UV in simulated reservoir
@@ -687,18 +713,18 @@ if plot_ferrous_lake:
     ax.plot(uv_wav, uv_toa_intensity, linewidth=2, linestyle='-', marker='o', color='black', label='Stellar Irradiation')
 
     ax.plot(uv_wav, uv_surface_intensity, linewidth=2, linestyle='-', marker='o', color='purple', label='Surface')
-    ax.plot(uv_wav, uv_surface_intensity*10.0**(-ferrocyanide_lake_withwater*1.0), linewidth=2, linestyle='-', marker='o', color='blue', label='1 cm')
-    ax.plot(uv_wav, uv_surface_intensity*10.0**(-ferrocyanide_lake_withwater*10.0), linewidth=2, linestyle='-', marker='o', color='cyan', label='10 cm')
-    ax.plot(uv_wav, uv_surface_intensity*10.0**(-ferrocyanide_lake_withwater*100.0), linewidth=2, linestyle='-', marker='o', color='green', label='100 cm')
+    ax.plot(uv_wav, uv_surface_intensity*10.0**(-ferrocyanide_lake_withwater*1.0/0.5), linewidth=2, linestyle='-', marker='o', color='blue', label='1 cm')
+    ax.plot(uv_wav, uv_surface_intensity*10.0**(-ferrocyanide_lake_withwater*10.0/0.5), linewidth=2, linestyle='-', marker='o', color='cyan', label='10 cm')
+    ax.plot(uv_wav, uv_surface_intensity*10.0**(-ferrocyanide_lake_withwater*100.0/0.5), linewidth=2, linestyle='-', marker='o', color='green', label='100 cm')
     
     ax.legend(ncol=1, loc='best')
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')    
     ax.set_yscale('log')
-    ax.set_ylabel(r'Intensity (photons/cm^2/s/nm')
+    ax.set_ylabel(r'Intensity (photons cm$^{2}$ s$^{-1}$ nm$^{-1}$')
     ax.set_ylim([1E8, 1.0E14]) 
     ax.set_xlim([200., 300.])
-    plt.savefig('./Plots/molecules/uv_ferrocyanide-lake.pdf', orientation='portrait',papertype='letter', format='pdf')
+    plt.savefig('./Plots/molecules/uv_ferrocyanide-lake.pdf', orientation='portrait', format='pdf')
     
     print('Fe2+, 100 uM')
     print('Nucleobase photolysis timescale enhancement: {0:1.2e}'.format(get_timescale('nucleobase-photolysis', conc_fe_hao_toner*data_abs['Fe(BF4)2_LK'], data_wav['LK'], 100.0)))
