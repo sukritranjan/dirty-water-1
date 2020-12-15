@@ -18,15 +18,15 @@ cm2nm=1.0E+7 #1 cm in nm
 hc=1.98645e-9 #value of h*c in erg*nm, useful to convert from ergs/cm2/s/nm to photons/cm2/s/nm
 
 ###Plotting switches.
-plotBr=False
-plotI=False
-plotCl=False
+plotBr=True
+plotI=True
+plotCl=True
 
-plotFeBF42=False
-plotferrocyanide=False
-plotSNP_FeCl2_FeSO4=False
+plotFeBF42=True
+plotferrocyanide=True
+plotSNP_FeCl2_FeSO4=True
 
-plot_halide_ferrous_ocean=False
+plot_halide_ferrous_ocean=True
 
 plot_halide_freshwater_lake=True
 plot_halide_carbonate_lake=True
@@ -186,21 +186,13 @@ data_abs={} #dict to hold molar absorptivities for measured molar absorptivities
 ###Pure water
 h2o_quickenden_wav, h2o_quickenden_abs = np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/quickenden.dat', skip_header=2, unpack=True, usecols=(0,1))#nm, cm**-1. Includes both scattering, absorption. 
 
-###Modern oceans: (Smith & Baker) Warning, guessing <300 nm.
-pureoceans_smith1981_wav, pureoceans_smith1981_abs=np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/smithbaker_purest.dat', skip_header=2, skip_footer=0, unpack=True, usecols=(0,1)) #purest modern natural water; nm, cm**-1.
-
-###Modern oceans: (Morel+2007)
-pureoceans_morel_wav=np.array([300., 305., 310., 315., 320., 325., 330., 335., 340., 345., 350., 355., 360., 365., 370., 375., 380., 385., 390., 395.])
-pureoceans_morel_abs=(np.array([0.01150, 0.0110, 0.01050, 0.01013, 0.00975, 0.00926, 0.00877, 0.00836, 0.00794, 0.00753, 0.00712, 0.00684, 0.00656, 0.00629, 0.00602, 0.00561, 0.00520, 0.00499, 0.00478, 0.00469]) + 0.5*np.array([0.0226, 0.0211, 0.0197, 0.0185, 0.0173, 0.0162, 0.0152, 0.0144, 0.0135, 0.0127, 0.0121, 0.0113, 0.0107, 0.0099, 0.0095, 0.0089, 0.0085, 0.0081, 0.0077, 0.0072])) * 0.01 #K_dsw2, converted from m**-1 to cm**-1.
 
 ###From Azra's work.
 data_wav['Br_azra'], data_abs['Br_azra'] = np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/johnson_br-truncated.dat', skip_header=2, unpack=True, usecols=(0,1))# Br-. Truncated to remove data >220 nm, which looks unreliable to me. 
 data_wav['I_azra'], data_abs['I_azra']= np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/guenther_i.dat', skip_header=2, unpack=True, usecols=(0,1)) #I-
-data_wav['NO3_azra'], data_abs['NO3_azra']= np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/mack_no3.dat', skip_header=2, unpack=True, usecols=(0,1)) #NO3-
 data_wav['Fe(BF4)2_azra'], data_abs['Fe(BF4)2_azra']= np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/fontana_fe2bf4.dat', skip_header=2, unpack=True, usecols=(0,1)) #Fe(BF4)2
 data_wav['FeCl2_azra'], data_abs['FeCl2_azra']= np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/fontana_fecl2.dat', skip_header=2, unpack=True, usecols=(0,1)) #FeCl2
 data_wav['FeSO4_azra'], data_abs['FeSO4_azra']= np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/fontana_feso4.dat', skip_header=2, unpack=True, usecols=(0,1)) #FeSO4
-data_wav['gelbstoff_azra'], data_abs['gelbstoff_azra'] = np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/cleaves_gelbstoff.dat', skip_header=2, unpack=True, usecols=(0,1))#organic gunk
 data_wav['KCl_azra'], data_abs['KCl_azra'] = np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/perkampus_kcl.dat', skip_header=2, unpack=True, usecols=(0,1))#organic gunk
 
 ###From Birkmann+2018
@@ -210,15 +202,6 @@ data_wav['birk_BrICl']=df['Wavelength (nm)']
 data_abs['birk_Br']=df['Br- (M**-1 cm**-1)']
 data_abs['birk_I']=df['I- (M**-1 cm**-1)']
 data_abs['birk_Cl']=df['Cl- (M**-1 cm**-1)']
-#df=pd.read_excel('./birkmann_2018_data.xlsx', sheet_name='NO3-OH', skiprow=0)
-#data_wav['birk_NO3OH']=df['Wavelength (nm)']
-#data_abs['birk_NO3']=df['NO3- (M**-1 cm**-1)']
-#data_abs['birk_OH']=df['OH- (M**-1 cm**-1)']
-#df=pd.read_excel('./birkmann_2018_data.xlsx', sheet_name='SO4-HCO3-CO3', skiprow=0)
-#data_wav['birk_SO4HCO3CO3']=df['Wavelength (nm)']
-#data_abs['birk_SO4']=df['SO4(2-) (M**-1 cm**-1)']
-#data_abs['birk_HCO3']=df['HCO3- (M**-1 cm**-1)']
-#data_abs['birk_CO3']=df['CO3(2-) (M**-1 cm**-1)']
 
 
 ###From Strizhakov+2014, for sodium nitroprusside. Need to concatenate shortwave (log scale) and longwave (linear scale) data here. 
@@ -250,22 +233,18 @@ data_abs['ross_ferricyanide']=np.flip(absthunk)
 ###
 
 ###From Gabi/Corinna's work
-df=pd.read_excel('./2020-08-23_Extinktion-coefficients-Sukrit-V7_mod.xlsx', sheet_name='Tabelle1') 
+df=pd.read_excel('./2020-08-23_Extinktion-coefficients-Sukrit-V7_mod_cutforpub.xlsx', sheet_name='Tabelle1') 
 data_wav['LK']=np.nan_to_num(df['Wavelength']) #nm LK=Lozano-Kufner
+
 data_abs['NaBr_LK']=np.nan_to_num(df['NaBr'])
 data_abs['NaBr_err_LK']=np.nan_to_num(df['NaBr-error'])
 
 data_abs['KBr_LK']=np.nan_to_num(df['KBr'])
 data_abs['KBr_err_LK']=np.nan_to_num(df['KBr-error'])
 
-data_abs['NaHCO3_LK']=np.nan_to_num(df['NaHCO3'])
-data_abs['NaHCO3_err_LK']=np.nan_to_num(df['NaHCO3-error'])
 
 data_abs['NaCl_LK']=np.nan_to_num(df['NaCl'])
 data_abs['NaCl_err_LK']=np.nan_to_num(df['NaCl-error'])
-
-#data_abs['KCl_LK']=np.nan_to_num(df['KCl'])
-#data_abs['KCl_err_LK']=np.nan_to_num(df['KCl-error'])
 
 data_abs['Fe(BF4)2_LK']=np.nan_to_num(df['Fe(BF4)2'])
 data_abs['Fe(BF4)2_err_LK']=np.nan_to_num(df['Fe(BF4)2-error'])
