@@ -28,14 +28,14 @@ plot_NO3=False
 
 plot_CO3_HCO3=False
 plot_HSm=False
-plotHSO3m=False
-plotSO3m=False
+plotHSO3m=True
+plotSO3m=True
 plotSNP_FeCl2_FeSO4=False
 
-plot_halide_ferrous_ocean=True
-plot_halide_freshwater_lake=True
-plot_halide_carbonate_lake=True
-plot_ferrous_lake=True
+plot_halide_ferrous_ocean=False
+plot_halide_freshwater_lake=False
+plot_halide_carbonate_lake=False
+plot_ferrous_lake=False
 
 
 ##############
@@ -298,8 +298,8 @@ data_abs={} #dict to hold molar absorptivities for measured molar absorptivities
 #Lit Data
 ###
 
-###Pure water
-h2o_quickenden_wav1, h2o_quickenden_abs1 = np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/quickenden.dat', skip_header=2, unpack=True, usecols=(0,1))#nm, cm**-1. Includes both scattering, absorption. 
+# ###Pure water
+# h2o_quickenden_wav1, h2o_quickenden_abs1 = np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/quickenden.dat', skip_header=2, unpack=True, usecols=(0,1))#nm, cm**-1. Includes both scattering, absorption. 
 
 h2o_quickenden_wav, h2o_quickenden_abs, h2o_quickenden_abs_err= np.genfromtxt('./Azra_Project/quickenden_with_uncerts.dat', skip_header=2, unpack=True, usecols=(0,1,2))#nm, cm**-1. Includes both scattering, absorption. 
 
@@ -310,7 +310,7 @@ h2o_quickenden_wav, h2o_quickenden_abs, h2o_quickenden_abs_err= np.genfromtxt('.
 # plt.show()
 
 ###Modern oceans: (Smith & Baker) Warning, guessing <300 nm.
-pureoceans_smith1981_wav, pureoceans_smith1981_abs=np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/smithbaker_purest.dat', skip_header=2, skip_footer=0, unpack=True, usecols=(0,1)) #purest modern natural water; nm, cm**-1.
+#pureoceans_smith1981_wav, pureoceans_smith1981_abs=np.genfromtxt('./Azra_Project/RSI_UV/Processed-Data/smithbaker_purest.dat', skip_header=2, skip_footer=0, unpack=True, usecols=(0,1)) #purest modern natural water; nm, cm**-1.
 
 ###Modern oceans: (Morel+2007)
 pureoceans_morel_wav=np.array([300., 305., 310., 315., 320., 325., 330., 335., 340., 345., 350., 355., 360., 365., 370., 375., 380., 385., 390., 395.])
@@ -738,6 +738,16 @@ if plotHSO3m:
     ax.set_xlabel('Wavelength (nm)')
     ax.set_xlim([200., 300.])
     
+    ####
+    #Save spectrum for use by other codes. 
+    ####
+    towrite=np.zeros((len(data_wav['hso3_composite']), 2))
+    towrite[:,0]=data_wav['hso3_composite']
+    towrite[:,1]=data_abs['hso3_composite']
+   
+    np.savetxt('./GeneratedSpectra/bisulfite_spectrum.dat', towrite, delimiter=' ', fmt='%3.2f %1.6e', newline='\n', header='Wavelength HSO3- \n (nm)   ')
+
+    
     plt.savefig('./Plots/molecules/NaHSO3.pdf', orientation='portrait', format='pdf')
     # plt.savefig('./Plots/molecules/NaHSO3.jpg', orientation='portrait',papertype='letter', format='jpg')
 #    
@@ -762,6 +772,15 @@ if plotSO3m:
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')
     ax.set_xlim([200., 300.])
+    
+    ####
+    #Save spectrum for use by other codes. 
+    ####
+    towrite=np.zeros((len(data_wav['so3_composite']), 2))
+    towrite[:,0]=data_wav['so3_composite']
+    towrite[:,1]=data_abs['so3_composite']
+   
+    np.savetxt('./GeneratedSpectra/sulfite_spectrum.dat', towrite, delimiter=' ', fmt='%3.2f %1.6e', newline='\n', header='Wavelength SO3[2-] \n (nm)   ')
     
     plt.savefig('./Plots/molecules/SO3m.pdf', orientation='portrait', format='pdf')
     # plt.savefig('./Plots/molecules/SO3m.jpg', orientation='portrait',papertype='letter', format='jpg')
@@ -846,7 +865,7 @@ if plot_halide_ferrous_ocean:
     ax[1].axhline(1.0E-2, color='black', linestyle=':')
     ax[1].axhline(1.0E-3, color='black', linestyle=':')
     
-    plt.savefig('./Plots/molecules/prebiotic-ocean.pdf', orientation='portrait', format='pdf')
+    plt.savefig('./Plots/molecules/prebiotic-ocean.pdf', orientation='portrait', papertype='letter', format='pdf')
     
     
     ###Quantities for paper text
@@ -1094,10 +1113,10 @@ if plot_halide_carbonate_lake:
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')    
     ax.set_yscale('log')
-    ax.set_ylabel(r'Intensity (photons cm$^{2}$ s$^{-1}$ nm$^{-1}$')
+    ax.set_ylabel(r'Intensity (photons cm$^{-2}$ s$^{-1}$ nm$^{-1}$)')
     ax.set_ylim([1E8, 1.0E14]) 
     ax.set_xlim([200., 300.])
-    plt.savefig('./Plots/molecules/uv_carbonate-lake.pdf', orientation='portrait', format='pdf')
+    plt.savefig('./Plots/molecules/uv_carbonate-lake.eps', orientation='portrait', format='eps')
     
     # ####
     # ##
@@ -1252,10 +1271,10 @@ if plot_ferrous_lake:
     ax.set_xscale('linear')
     ax.set_xlabel('Wavelength (nm)')    
     ax.set_yscale('log')
-    ax.set_ylabel(r'Intensity (photons cm$^{2}$ s$^{-1}$ nm$^{-1}$')
+    ax.set_ylabel(r'Intensity (photons cm$^{-2}$ s$^{-1}$ nm$^{-1}$)')
     ax.set_ylim([1E8, 1.0E14]) 
     ax.set_xlim([200., 300.])
-    plt.savefig('./Plots/molecules/uv_ferrocyanide-lake.pdf', orientation='portrait', format='pdf')
+    plt.savefig('./Plots/molecules/uv_ferrocyanide-lake.eps', orientation='portrait', format='eps')
     
     # print('Ferrocyanide Lake, High-Absorption Endmember')
     # print('Nucleobase photolysis timescale enhancement: {0:1.2e}'.format(get_timescale('nucleobase-photolysis', ferrocyanide_lake_high, data_wav['LK'], 100.0)))
