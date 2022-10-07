@@ -745,7 +745,7 @@ if plotHSO3m:
     towrite[:,0]=data_wav['hso3_composite']
     towrite[:,1]=data_abs['hso3_composite']
    
-    np.savetxt('./GeneratedSpectra/bisulfite_spectrum.dat', towrite, delimiter=' ', fmt='%3.2f %1.6e', newline='\n', header='Wavelength HSO3- \n (nm)   ')
+    np.savetxt('./GeneratedSpectra/bisulfite_spectrum.dat', towrite, delimiter=' ', fmt='%3.2f %1.6e', newline='\n', header='Wavelength     HSO3- Molar Decadic Absorption Coefficient \n (nm)   (M$^{-1}$cm$^{-1}$)')
 
     
     plt.savefig('./Plots/molecules/NaHSO3.pdf', orientation='portrait', format='pdf')
@@ -780,7 +780,7 @@ if plotSO3m:
     towrite[:,0]=data_wav['so3_composite']
     towrite[:,1]=data_abs['so3_composite']
    
-    np.savetxt('./GeneratedSpectra/sulfite_spectrum.dat', towrite, delimiter=' ', fmt='%3.2f %1.6e', newline='\n', header='Wavelength SO3[2-] \n (nm)   ')
+    np.savetxt('./GeneratedSpectra/sulfite_spectrum.dat', towrite, delimiter=' ', fmt='%3.2f %1.6e', newline='\n', header='Wavelength SO3[2-] Molar Decadic Absorption Coefficient \n (nm)   (M$^{-1}$cm$^{-1}$)')
     
     plt.savefig('./Plots/molecules/SO3m.pdf', orientation='portrait', format='pdf')
     # plt.savefig('./Plots/molecules/SO3m.jpg', orientation='portrait',papertype='letter', format='jpg')
