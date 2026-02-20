@@ -28,14 +28,15 @@ plot_NO3=False
 
 plot_CO3_HCO3=False
 plot_HSm=False
-plotHSO3m=True
-plotSO3m=True
+plotHSO3m=False
+plotSO3m=False
 plotSNP_FeCl2_FeSO4=False
 
 plot_halide_ferrous_ocean=False
 plot_halide_freshwater_lake=False
 plot_halide_carbonate_lake=False
 plot_ferrous_lake=False
+
 
 
 ##############
